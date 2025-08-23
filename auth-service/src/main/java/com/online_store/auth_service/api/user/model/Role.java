@@ -9,7 +9,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 public enum Role {
     ADMIN,
     SELLER,
-    SHIPPER,
     CUSTOMER;
 
     Collection<? extends GrantedAuthority> getAuthorities() {
