@@ -2,9 +2,12 @@ package com.online_store.auth_service.api.user.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.core.Authentication;
 import com.online_store.auth_service.api.auth.dto.AuthRequest;
+import com.online_store.auth_service.api.user.dto.UserResponse;
 import com.online_store.auth_service.api.user.exception.UserAlreadyExistsException;
 import com.online_store.auth_service.api.user.exception.UserNotFoundException;
 import com.online_store.auth_service.api.user.model.Role;
@@ -23,6 +26,29 @@ public class UserService {
             UtilsService utilsService) {
         this.repository = repository;
         this.utilsService = utilsService;
+    }
+
+    public UserResponse getCurrentUser() {
+        logger.info("Attempting to retrieve account information for the authenticated user.");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            logger.warn("Authentication object is null. User is not authenticated.");
+            throw new IllegalStateException("User not authenticated.");
+        }
+
+        String userEmail = authentication.getName();
+        logger.debug("Found authenticated user with email: {}", userEmail);
+
+        try {
+            User user = findUserByEmail(userEmail);
+            logger.info("Account information successfully retrieved for user: {}", userEmail);
+            return new UserResponse(user.getId(),
+                    user.getEmail(),
+                    user.getRole());
+        } catch (UserNotFoundException e) {
+            logger.error("User with email {} not found while trying to get account details.", userEmail);
+            throw e;
+        }
     }
 
     public void createUser(AuthRequest dto, Role role) {
@@ -55,4 +81,5 @@ public class UserService {
                     return new UserNotFoundException("User not found with email:" + email);
                 });
     }
+
 }
