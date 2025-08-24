@@ -63,7 +63,29 @@ public class Company {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Getter Metotları
+    public Company() {
+    }
+
+    public Company(String name,
+            Long logo,
+            String description,
+            String websiteUrl,
+            String phone,
+            String email,
+            String taxId,
+            String taxOffice,
+            Long user) {
+        this.name = name;
+        this.logo = logo;
+        this.description = description;
+        this.websiteUrl = websiteUrl;
+        this.phone = phone;
+        this.email = email;
+        this.taxId = taxId;
+        this.taxOffice = taxOffice;
+        this.user = user;
+    }
+
     public Long getId() {
         return id;
     }
@@ -120,7 +142,6 @@ public class Company {
         return updatedAt;
     }
 
-    // Setter Metotları
     public void setId(Long id) {
         this.id = id;
     }
