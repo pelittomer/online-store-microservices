@@ -1,10 +1,14 @@
-package com.online_store.logistic_service.api.company.exception;
+package com.online_store.logistic_service.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import com.online_store.logistic_service.api.company.exception.CompanyAlreadyExistsException;
+import com.online_store.logistic_service.api.company.exception.CompanyNotFoundException;
+import com.online_store.logistic_service.api.company.exception.CompanyUpdateException;
+import com.online_store.logistic_service.api.shipper.exception.ShipperAlreadyExistsException;
 import com.online_store.logistic_service.common.response.ErrorResponse;
 
 @ControllerAdvice
@@ -25,5 +29,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleCompanyUpdateException(CompanyUpdateException ex) {
         return new ResponseEntity<>(new ErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST.value()),
                 HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ShipperAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleShipperAlreadyExistsException(ShipperAlreadyExistsException ex) {
+        return new ResponseEntity<>(new ErrorResponse(ex.getMessage(), HttpStatus.CONFLICT.value()),
+                HttpStatus.CONFLICT);
     }
 }

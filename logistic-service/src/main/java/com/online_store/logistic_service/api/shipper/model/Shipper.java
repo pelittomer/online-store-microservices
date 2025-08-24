@@ -38,7 +38,7 @@ public class Shipper {
     private String address;
 
     @Column(name = "is_active")
-    private boolean isActive = true;
+    private Boolean isActive = true;
 
     @Column(nullable = false, unique = true)
     private String apiKey;
@@ -50,6 +50,25 @@ public class Shipper {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public Shipper() {
+    }
+
+    public Shipper(String name,
+            Long logo,
+            String websiteUrl,
+            String phone,
+            String email,
+            String address,
+            String apiKey) {
+        this.name = name;
+        this.logo = logo;
+        this.websiteUrl = websiteUrl;
+        this.phone = phone;
+        this.email = email;
+        this.address = address;
+        this.apiKey = apiKey;
+    }
 
     public Long getId() {
         return id;
@@ -79,7 +98,7 @@ public class Shipper {
         return address;
     }
 
-    public boolean isActive() {
+    public Boolean getIsActive() {
         return isActive;
     }
 
@@ -123,7 +142,7 @@ public class Shipper {
         this.address = address;
     }
 
-    public void setActive(boolean isActive) {
+    public void setActive(Boolean isActive) {
         this.isActive = isActive;
     }
 
