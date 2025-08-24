@@ -3,13 +3,13 @@ spring:
     name: LOGISTICS-SERVICE
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         use_sql_comments: true
   datasource:
-    url: jdbc:mysql://localhost:3306/logistics-db
+    url: jdbc:mysql://localhost:3306/logistic-service-db
     username: root
     password: admin
     driver-class-name: com.mysql.cj.jdbc.Driver
