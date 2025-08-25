@@ -27,9 +27,8 @@ public class VariationOption {
     public VariationOption() {
     }
 
-    public VariationOption(String name, Variation variation) {
+    public VariationOption(String name) {
         this.name = name;
-        this.variation = variation;
     }
 
     public Long getId() {

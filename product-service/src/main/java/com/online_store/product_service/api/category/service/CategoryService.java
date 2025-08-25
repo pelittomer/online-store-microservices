@@ -96,7 +96,7 @@ public class CategoryService {
         return rootCategories;
     }
 
-    private Category findCategoryById(Long id) {
+    public Category findCategoryById(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> {
                     logger.warn("Parent category not found with ID: {}", id);

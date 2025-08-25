@@ -54,6 +54,11 @@ public class Variation {
         this.category = category;
     }
 
+    public void addOption(VariationOption option) {
+        options.add(option);
+        option.setVariation(this);
+    }
+
     public Long getId() {
         return id;
     }
