@@ -55,7 +55,22 @@ public class Category {
     public Category() {
     }
 
-    public Category(String name, String description, Integer leftValue, Integer rightValue, Category parent, Long image,
+    public Category(String name,
+            String description,
+            Long image,
+            Long icon) {
+        this.name = name;
+        this.description = description;
+        this.image = image;
+        this.icon = icon;
+    }
+
+    public Category(String name,
+            String description,
+            Integer leftValue,
+            Integer rightValue,
+            Category parent,
+            Long image,
             Long icon) {
         this.name = name;
         this.description = description;
