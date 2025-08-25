@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.online_store.product_service.api.variation.model.VariationOption;
 
-import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
