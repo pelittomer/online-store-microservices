@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: CART-SERVICE
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        use_sql_comments: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/cart-service-db
+    username: root
+    password: admin
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+server:
+  port: 8092
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
