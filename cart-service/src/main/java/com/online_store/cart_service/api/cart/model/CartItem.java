@@ -1,5 +1,6 @@
 package com.online_store.cart_service.api.cart.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -21,7 +22,7 @@ public class CartItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Long product;
 
-    @JoinColumn(name = "product_stock_id", nullable = false)
+    @Column(name = "product_stock_id", nullable = false)
     private Long productStock;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,7 +32,10 @@ public class CartItem {
     public CartItem() {
     }
 
-    public CartItem(Integer quantity, Long product, Long productStock, Cart cart) {
+    public CartItem(Integer quantity,
+            Long product,
+            Long productStock,
+            Cart cart) {
         this.quantity = quantity;
         this.product = product;
         this.productStock = productStock;

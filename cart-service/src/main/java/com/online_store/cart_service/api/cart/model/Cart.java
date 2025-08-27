@@ -41,9 +41,8 @@ public class Cart {
     public Cart() {
     }
 
-    public Cart(Long user, Set<CartItem> cartItems) {
+    public Cart(Long user) {
         this.user = user;
-        this.cartItems = cartItems;
     }
 
     public Long getId() {
