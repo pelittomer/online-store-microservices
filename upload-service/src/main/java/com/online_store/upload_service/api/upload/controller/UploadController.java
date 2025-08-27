@@ -15,12 +15,14 @@ import java.io.IOException;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/api/upload")
@@ -51,6 +53,23 @@ public class UploadController {
                 .contentType(MediaType.parseMediaType(uploadFile.getFileType()))
                 .headers(headers)
                 .body(resource);
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<ApiResponse<String>> updateFile(
+            @PathVariable Long id,
+            @RequestPart(name = "file", required = true) MultipartFile file) throws IOException {
+        return ResponseEntity.ok(
+                ApiResponse.success("",
+                        service.updateFile(id, file)));
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<ApiResponse<String>> deleteFile(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(
+                ApiResponse.success("",
+                        service.deleteFile(id)));
     }
 
 }
