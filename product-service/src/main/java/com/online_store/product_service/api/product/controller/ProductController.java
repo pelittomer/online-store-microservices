@@ -15,50 +15,61 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import com.online_store.product_service.api.product.dto.request.ProductRequest;
 import com.online_store.product_service.api.product.dto.response.ProductDetailsResponse;
 import com.online_store.product_service.api.product.dto.response.ProductResponse;
+import com.online_store.product_service.api.product.dto.response.ProductStockInfo;
 import com.online_store.product_service.api.product.service.ProductService;
 import com.online_store.product_service.common.response.ApiResponse;
 
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/product")
 public class ProductController {
-    private final ProductService service;
+        private final ProductService service;
 
-    public ProductController(ProductService service) {
-        this.service = service;
-    }
+        public ProductController(ProductService service) {
+                this.service = service;
+        }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<String>> addProduct(
-            @Valid @RequestPart("product") ProductRequest productRequest,
-            MultipartHttpServletRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("",
-                        service.addProduct(productRequest, request)));
-    }
+        @PostMapping
+        public ResponseEntity<ApiResponse<String>> addProduct(
+                        @Valid @RequestPart("product") ProductRequest productRequest,
+                        MultipartHttpServletRequest request) {
+                return ResponseEntity.ok(
+                                ApiResponse.success("",
+                                                service.addProduct(productRequest, request)));
+        }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> updateProduct(
-            @PathVariable Long id,
-            MultipartHttpServletRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("",
-                        service.updateProduct()));
-    }
+        @PutMapping("/{id}")
+        public ResponseEntity<ApiResponse<String>> updateProduct(
+                        @PathVariable Long id,
+                        MultipartHttpServletRequest request) {
+                return ResponseEntity.ok(
+                                ApiResponse.success("",
+                                                service.updateProduct()));
+        }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> listProducts() {
-        return ResponseEntity.ok(
-                ApiResponse.success("",
-                        service.listProducts()));
-    }
+        @GetMapping
+        public ResponseEntity<ApiResponse<List<ProductResponse>>> listProducts() {
+                return ResponseEntity.ok(
+                                ApiResponse.success("",
+                                                service.listProducts()));
+        }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductDetailsResponse>> getProductById(
-            @PathVariable(required = true) Long id) {
-        return ResponseEntity.ok(
-                ApiResponse.success("",
-                        service.getProductById(id)));
-    }
+        @GetMapping("/{id}")
+        public ResponseEntity<ApiResponse<ProductDetailsResponse>> getProductById(
+                        @PathVariable(required = true) Long id) {
+                return ResponseEntity.ok(
+                                ApiResponse.success("",
+                                                service.getProductById(id)));
+        }
+
+        @GetMapping("{productId}/stock/{stockId}")
+        public ResponseEntity<ApiResponse<ProductStockInfo>> getProductStock(
+                        @PathVariable("productId") Long productId,
+                        @PathVariable("stockId") Long stockId) {
+                return ResponseEntity.ok(
+                                ApiResponse.success("", service.getProductStock(productId, stockId)));
+        }
+
 }
