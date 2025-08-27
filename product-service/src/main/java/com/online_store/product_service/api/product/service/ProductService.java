@@ -32,6 +32,7 @@ import com.online_store.product_service.api.product.dto.response.ProductCriteria
 import com.online_store.product_service.api.product.dto.response.ProductDetailsDetailResponse;
 import com.online_store.product_service.api.product.dto.response.ProductDetailsResponse;
 import com.online_store.product_service.api.product.dto.response.ProductResponse;
+import com.online_store.product_service.api.product.dto.response.ProductStockInfo;
 import com.online_store.product_service.api.product.dto.response.ProductStockResponse;
 import com.online_store.product_service.api.product.dto.response.ProductVariationOptionResponse;
 import com.online_store.product_service.api.product.dto.response.ProductVariationResponse;
@@ -45,6 +46,7 @@ import com.online_store.product_service.api.product.model.embeddables.Discount;
 import com.online_store.product_service.api.product.model.embeddables.Feature;
 import com.online_store.product_service.api.product.model.embeddables.StockVariation;
 import com.online_store.product_service.api.product.repository.ProductRepository;
+import com.online_store.product_service.api.product.repository.ProductStockRepository;
 import com.online_store.product_service.api.variation.dto.VariationOptionResponse;
 import com.online_store.product_service.api.variation.model.Variation;
 import com.online_store.product_service.api.variation.model.VariationOption;
@@ -62,327 +64,347 @@ import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class ProductService {
-    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+        private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-    private final ProductRepository repository;
-    private final VariationService variationService;
-    private final BrandService brandService;
-    private final CategoryService categoryService;
-    private final UploadClient uploadClient;
-    private final UtilsService utilsService;
+        private final ProductRepository repository;
+        private final ProductStockRepository productStockRepository;
+        private final VariationService variationService;
+        private final BrandService brandService;
+        private final CategoryService categoryService;
+        private final UploadClient uploadClient;
+        private final UtilsService utilsService;
 
-    public ProductService(ProductRepository repository,
-            VariationService variationService,
-            BrandService brandService,
-            CategoryService categoryService,
-            UploadClient uploadService,
-            UtilsService utilsService) {
-        this.repository = repository;
-        this.variationService = variationService;
-        this.brandService = brandService;
-        this.categoryService = categoryService;
-        this.uploadClient = uploadService;
-        this.utilsService = utilsService;
-    }
-
-    public String addProduct(ProductRequest dto,
-            MultipartHttpServletRequest request) {
-        CompanyDetailsResponse company = utilsService.getMyCompany();
-        Long shipper = utilsService.getShipperById(dto.shipper());
-        Brand brand = brandService.findByIdBrand(dto.brand());
-        Category category = categoryService.findCategoryById(dto.category());
-
-        if (company.status() != CompanyStatus.APPROVED) {
-            logger.warn("Attempt to add product by a non-approved company: {}", company.name());
-            throw new Error("Your company is not approved. Products can't be added.");
+        public ProductService(ProductRepository repository,
+                        ProductStockRepository productStockRepository,
+                        VariationService variationService,
+                        BrandService brandService,
+                        CategoryService categoryService,
+                        UploadClient uploadService,
+                        UtilsService utilsService) {
+                this.repository = repository;
+                this.productStockRepository = productStockRepository;
+                this.variationService = variationService;
+                this.brandService = brandService;
+                this.categoryService = categoryService;
+                this.uploadClient = uploadService;
+                this.utilsService = utilsService;
         }
 
-        Map<String, List<MultipartFile>> dynamicFiles = processDynamicFiles(request);
-        Product product = productMapper(
-                dto,
-                dynamicFiles,
-                company.id(),
-                shipper,
-                brand,
-                category);
-        repository.save(product);
+        public String addProduct(ProductRequest dto,
+                        MultipartHttpServletRequest request) {
+                CompanyDetailsResponse company = utilsService.getMyCompany();
+                Long shipper = utilsService.getShipperById(dto.shipper());
+                Brand brand = brandService.findByIdBrand(dto.brand());
+                Category category = categoryService.findCategoryById(dto.category());
 
-        logger.info("Product '{}' successfully added by company '{}'.", product, company.id());
-        return "Product created successfully.";
-
-    }
-
-    public String updateProduct() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateProduct'");
-    }
-
-    public List<ProductResponse> listProducts() {
-        return repository.findAll().stream()
-                .map(this::productResponseMapper).toList();
-    }
-
-    public ProductDetailsResponse getProductById(Long id) {
-        Product product = findProductById(id);
-        return productDetailsResponseMapper(product);
-    }
-
-    private Map<String, List<MultipartFile>> processDynamicFiles(MultipartHttpServletRequest request) {
-        Map<String, List<MultipartFile>> dynamicFiles = new HashMap<>();
-        Iterator<String> fileNames = request.getFileNames();
-
-        while (fileNames.hasNext()) {
-            String fileName = fileNames.next();
-            List<MultipartFile> filesForThisKey = request.getFiles(fileName);
-
-            if (filesForThisKey != null && !filesForThisKey.isEmpty()) {
-                List<MultipartFile> actualFiles = filesForThisKey.stream()
-                        .filter(f -> !f.isEmpty())
-                        .toList();
-
-                if (!actualFiles.isEmpty()) {
-                    dynamicFiles.put(fileName, actualFiles);
+                if (company.status() != CompanyStatus.APPROVED) {
+                        logger.warn("Attempt to add product by a non-approved company: {}", company.name());
+                        throw new Error("Your company is not approved. Products can't be added.");
                 }
-            }
+
+                Map<String, List<MultipartFile>> dynamicFiles = processDynamicFiles(request);
+                Product product = productMapper(
+                                dto,
+                                dynamicFiles,
+                                company.id(),
+                                shipper,
+                                brand,
+                                category);
+                repository.save(product);
+
+                logger.info("Product '{}' successfully added by company '{}'.", product, company.id());
+                return "Product created successfully.";
+
         }
-        return dynamicFiles;
-    }
 
-    public Product findProductById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Product not found!"));
-    }
-
-    public ProductResponse productResponseMapper(Product dto) {
-        BrandResponse brand = brandService.brandResponseMapper(dto.getBrand());
-        List<Long> images = dto.getImages().stream().toList();
-        CompanyResponse company = utilsService.getCompanyById(dto.getCompany());
-        return new ProductResponse(
-                dto.getId(),
-                dto.getName(),
-                dto.getPrice(),
-                images,
-                brand,
-                company,
-                dto.getCreatedAt(),
-                dto.getUpdatedAt());
-    }
-
-    public Product productMapper(ProductRequest dto,
-            Map<String, List<MultipartFile>> dynamicFiles,
-            Long company,
-            Long shipper,
-            Brand brand,
-            Category category) {
-        Set<Long> productImages = dynamicFiles.get("images").stream()
-                .map(this::uploadFile).collect(Collectors.toSet());
-        ProductDetail productDetail = productDetailMapper(dto.productDetail(), dynamicFiles);
-        List<ProductStock> productStocks = dto.productStocks().stream()
-                .map(this::productStockMapper).collect(Collectors.toList());
-        Product product = new Product(
-                dto.name(),
-                dto.price(),
-                dto.isPublished(),
-                productImages,
-                brand,
-                shipper,
-                company,
-                category,
-                productDetail,
-                productStocks);
-
-        productDetail.setProduct(product);
-        productStocks.forEach((item) -> item.setProduct(product));
-        return product;
-    }
-
-    private ProductDetail productDetailMapper(
-            ProductDetailRequest dto,
-            Map<String, List<MultipartFile>> dynamicFiles) {
-        Set<Feature> features = dto.features().stream().map(this::featureMapper)
-                .collect(Collectors.toSet());
-        List<ProductCriteria> productCriterias = dto.productCriterias().stream()
-                .map((item) -> productCriteriaMapper(item, dynamicFiles)).toList();
-        ProductDetail productDetail = new ProductDetail(
-                dto.description(),
-                dto.shortDescription(),
-                features,
-                productCriterias);
-
-        productCriterias.forEach(item -> item.setProductDetail(productDetail));
-        return productDetail;
-    }
-
-    private Feature featureMapper(FeatureDto dto) {
-        return new Feature(
-                dto.name(),
-                dto.value());
-    }
-
-    private FeatureDto featureDtoMapper(Feature dto) {
-        return new FeatureDto(
-                dto.getName(),
-                dto.getValue());
-    }
-
-    private ProductCriteria productCriteriaMapper(ProductCriteriaRequest dto,
-            Map<String, List<MultipartFile>> dynamicFiles) {
-        Set<CriteriaOption> criteriaOptions = dto.criteriaOptions().stream()
-                .map((item) -> criteriaOptionMapper(item, dynamicFiles))
-                .collect(Collectors.toSet());
-        Variation variation = variationService.findVariationById(dto.variation());
-
-        ProductCriteria productCriteria = new ProductCriteria(
-                variation,
-                criteriaOptions);
-        criteriaOptions.forEach(item -> item.setProductCriteria(productCriteria));
-        return productCriteria;
-    }
-
-    private CriteriaOption criteriaOptionMapper(CriteriaOptionRequest dto,
-            Map<String, List<MultipartFile>> dynamicFiles) {
-        VariationOption variationOption = variationService
-                .findVariationOptionById(dto.variationOption());
-        Set<Long> images = dynamicFiles.get(dto.variationOption().toString()).stream()
-                .map(this::uploadFile).collect(Collectors.toSet());
-
-        return new CriteriaOption(
-                variationOption,
-                images);
-    }
-
-    private ProductStock productStockMapper(ProductStockRequest dto) {
-        Set<StockVariation> stockVariations = dto.stockVariations().stream()
-                .map(this::stockVariation).collect(Collectors.toSet());
-
-        return new ProductStock(
-                dto.stockQuantity(),
-                dto.additionalPrice(),
-                dto.isLimited(),
-                dto.replenishQuantity(),
-                stockVariations);
-
-    }
-
-    private StockVariation stockVariation(StockVariationRequest dto) {
-        Variation variation = variationService.findVariationById(dto.variation());
-        VariationOption variationOption = variationService
-                .findVariationOptionById(dto.variationOption());
-        return new StockVariation(
-                variation,
-                variationOption);
-    }
-
-    private Long uploadFile(MultipartFile file) {
-        ApiResponse<UploadResponse> upload = uploadClient.uploadFile(file);
-        return upload.data().upload();
-    }
-
-    private ProductDetailsResponse productDetailsResponseMapper(Product dto) {
-        DiscountDto discount = null;
-        if (dto.getDiscount() != null) {
-            discount = discountMapper(dto.getDiscount());
+        public String updateProduct() {
+                // TODO Auto-generated method stub
+                throw new UnsupportedOperationException("Unimplemented method 'updateProduct'");
         }
-        List<Long> images = dto.getImages().stream().toList();
 
-        BrandResponse brand = brandService.brandResponseMapper(dto.getBrand());
-        ShipperResponse shipper = utilsService.getShipper(dto.getShipper());
-        CompanyResponse company = utilsService.getCompanyById(dto.getCompany());
-        CategoryResponse category = categoryService.mapCategoryToResponseDto(dto.getCategory());
-        ProductDetailsDetailResponse productDetail = productDetailMapper(dto.getProductDetail());
-        List<ProductStockResponse> productStocks = dto.getProductStocks().stream()
-                .map(this::productStocksMapper).toList();
-        return new ProductDetailsResponse(
-                dto.getId(),
-                dto.getName(),
-                discount,
-                dto.getIsPublished(),
-                images,
-                brand,
-                shipper,
-                company,
-                category,
-                productDetail,
-                productStocks,
-                dto.getCreatedAt(),
-                dto.getUpdatedAt());
-    }
+        public List<ProductResponse> listProducts() {
+                return repository.findAll().stream()
+                                .map(this::productResponseMapper).toList();
+        }
 
-    private DiscountDto discountMapper(Discount dto) {
-        return new DiscountDto(
-                dto.getDiscountPercentage(),
-                dto.getStartDate(),
-                dto.getEndDate(),
-                dto.getAppliedPrice());
-    }
+        public ProductDetailsResponse getProductById(Long id) {
+                Product product = findProductById(id);
+                return productDetailsResponseMapper(product);
+        }
 
-    private ProductDetailsDetailResponse productDetailMapper(ProductDetail dto) {
-        List<FeatureDto> features = dto.getFeatures().stream()
-                .map(this::featureDtoMapper).toList();
+        public ProductStockInfo getProductStock(Long productId, Long stockId) {
+                ProductStock productStock = productStockRepository
+                                .findProductStockByProductIdAndStockId(productId, stockId)
+                                .orElseThrow(() -> new EntityNotFoundException("Stock not found!"));
+                return productStockInfoMapper(productStock);
+        }
 
-        List<ProductCriteriaResponse> productCriterias = dto.getProductCriterias().stream()
-                .map(this::productCriteriaMapper).toList();
-        return new ProductDetailsDetailResponse(
-                dto.getId(),
-                dto.getDescription(),
-                dto.getShortDescription(),
-                features,
-                productCriterias);
-    }
+        private ProductStockInfo productStockInfoMapper(ProductStock dto) {
+                return new ProductStockInfo(
+                                dto.getId(),
+                                dto.getStockQuantity(),
+                                dto.getAdditionalPrice(),
+                                dto.getIsLimited(),
+                                dto.getReplenishQuantity());
+        }
 
-    private ProductCriteriaResponse productCriteriaMapper(ProductCriteria dto) {
-        List<CriteriaOptionResponse> criteriaOptions = dto.getCriteriaOptions().stream()
-                .map(this::criteriaOptionsMapper).toList();
-        ProductVariationResponse variation = productVariationMapper(dto.getVariation());
-        return new ProductCriteriaResponse(
-                dto.getId(),
-                variation,
-                criteriaOptions);
-    }
+        private Map<String, List<MultipartFile>> processDynamicFiles(MultipartHttpServletRequest request) {
+                Map<String, List<MultipartFile>> dynamicFiles = new HashMap<>();
+                Iterator<String> fileNames = request.getFileNames();
 
-    private ProductVariationResponse productVariationMapper(Variation dto) {
-        return new ProductVariationResponse(
-                dto.getId(),
-                dto.getName());
-    }
+                while (fileNames.hasNext()) {
+                        String fileName = fileNames.next();
+                        List<MultipartFile> filesForThisKey = request.getFiles(fileName);
 
-    private CriteriaOptionResponse criteriaOptionsMapper(CriteriaOption dto) {
-        List<Long> images = dto.getImages().stream().toList();
-        ProductVariationOptionResponse variationOption = variationOptionMapper(dto.getVariationOption());
-        return new CriteriaOptionResponse(
-                dto.getId(),
-                variationOption,
-                images);
-    }
+                        if (filesForThisKey != null && !filesForThisKey.isEmpty()) {
+                                List<MultipartFile> actualFiles = filesForThisKey.stream()
+                                                .filter(f -> !f.isEmpty())
+                                                .toList();
 
-    private ProductVariationOptionResponse variationOptionMapper(VariationOption dto) {
-        return new ProductVariationOptionResponse(
-                dto.getId(),
-                dto.getName());
-    }
+                                if (!actualFiles.isEmpty()) {
+                                        dynamicFiles.put(fileName, actualFiles);
+                                }
+                        }
+                }
+                return dynamicFiles;
+        }
 
-    private ProductStockResponse productStocksMapper(ProductStock dto) {
-        List<StockVariationResponse> stockVariations = dto.getStockVariations().stream()
-                .map(this::stockVariationMapper).toList();
+        public Product findProductById(Long id) {
+                return repository.findById(id)
+                                .orElseThrow(() -> new EntityNotFoundException("Product not found!"));
+        }
 
-        return new ProductStockResponse(
-                dto.getId(),
-                dto.getStockQuantity(),
-                dto.getAdditionalPrice(),
-                dto.getIsLimited(),
-                dto.getReplenishQuantity(),
-                stockVariations);
+        public ProductResponse productResponseMapper(Product dto) {
+                BrandResponse brand = brandService.brandResponseMapper(dto.getBrand());
+                List<Long> images = dto.getImages().stream().toList();
+                CompanyResponse company = utilsService.getCompanyById(dto.getCompany());
+                return new ProductResponse(
+                                dto.getId(),
+                                dto.getName(),
+                                dto.getPrice(),
+                                images,
+                                brand,
+                                company,
+                                dto.getCreatedAt(),
+                                dto.getUpdatedAt());
+        }
 
-    }
+        public Product productMapper(ProductRequest dto,
+                        Map<String, List<MultipartFile>> dynamicFiles,
+                        Long company,
+                        Long shipper,
+                        Brand brand,
+                        Category category) {
+                Set<Long> productImages = dynamicFiles.get("images").stream()
+                                .map(this::uploadFile).collect(Collectors.toSet());
+                ProductDetail productDetail = productDetailMapper(dto.productDetail(), dynamicFiles);
+                List<ProductStock> productStocks = dto.productStocks().stream()
+                                .map(this::productStockMapper).collect(Collectors.toList());
+                Product product = new Product(
+                                dto.name(),
+                                dto.price(),
+                                dto.isPublished(),
+                                productImages,
+                                brand,
+                                shipper,
+                                company,
+                                category,
+                                productDetail,
+                                productStocks);
 
-    public StockVariationResponse stockVariationMapper(StockVariation dto) {
-        VariationOptionResponse variationOption = new VariationOptionResponse(
-                dto.getVariationOption().getId(),
-                dto.getVariationOption().getName());
-        return new StockVariationResponse(
-                dto.getVariation().getId(),
-                dto.getVariation().getName(),
-                variationOption);
+                productDetail.setProduct(product);
+                productStocks.forEach((item) -> item.setProduct(product));
+                return product;
+        }
 
-    }
+        private ProductDetail productDetailMapper(
+                        ProductDetailRequest dto,
+                        Map<String, List<MultipartFile>> dynamicFiles) {
+                Set<Feature> features = dto.features().stream().map(this::featureMapper)
+                                .collect(Collectors.toSet());
+                List<ProductCriteria> productCriterias = dto.productCriterias().stream()
+                                .map((item) -> productCriteriaMapper(item, dynamicFiles)).toList();
+                ProductDetail productDetail = new ProductDetail(
+                                dto.description(),
+                                dto.shortDescription(),
+                                features,
+                                productCriterias);
+
+                productCriterias.forEach(item -> item.setProductDetail(productDetail));
+                return productDetail;
+        }
+
+        private Feature featureMapper(FeatureDto dto) {
+                return new Feature(
+                                dto.name(),
+                                dto.value());
+        }
+
+        private FeatureDto featureDtoMapper(Feature dto) {
+                return new FeatureDto(
+                                dto.getName(),
+                                dto.getValue());
+        }
+
+        private ProductCriteria productCriteriaMapper(ProductCriteriaRequest dto,
+                        Map<String, List<MultipartFile>> dynamicFiles) {
+                Set<CriteriaOption> criteriaOptions = dto.criteriaOptions().stream()
+                                .map((item) -> criteriaOptionMapper(item, dynamicFiles))
+                                .collect(Collectors.toSet());
+                Variation variation = variationService.findVariationById(dto.variation());
+
+                ProductCriteria productCriteria = new ProductCriteria(
+                                variation,
+                                criteriaOptions);
+                criteriaOptions.forEach(item -> item.setProductCriteria(productCriteria));
+                return productCriteria;
+        }
+
+        private CriteriaOption criteriaOptionMapper(CriteriaOptionRequest dto,
+                        Map<String, List<MultipartFile>> dynamicFiles) {
+                VariationOption variationOption = variationService
+                                .findVariationOptionById(dto.variationOption());
+                Set<Long> images = dynamicFiles.get(dto.variationOption().toString()).stream()
+                                .map(this::uploadFile).collect(Collectors.toSet());
+
+                return new CriteriaOption(
+                                variationOption,
+                                images);
+        }
+
+        private ProductStock productStockMapper(ProductStockRequest dto) {
+                Set<StockVariation> stockVariations = dto.stockVariations().stream()
+                                .map(this::stockVariation).collect(Collectors.toSet());
+
+                return new ProductStock(
+                                dto.stockQuantity(),
+                                dto.additionalPrice(),
+                                dto.isLimited(),
+                                dto.replenishQuantity(),
+                                stockVariations);
+
+        }
+
+        private StockVariation stockVariation(StockVariationRequest dto) {
+                Variation variation = variationService.findVariationById(dto.variation());
+                VariationOption variationOption = variationService
+                                .findVariationOptionById(dto.variationOption());
+                return new StockVariation(
+                                variation,
+                                variationOption);
+        }
+
+        private Long uploadFile(MultipartFile file) {
+                ApiResponse<UploadResponse> upload = uploadClient.uploadFile(file);
+                return upload.data().upload();
+        }
+
+        private ProductDetailsResponse productDetailsResponseMapper(Product dto) {
+                DiscountDto discount = null;
+                if (dto.getDiscount() != null) {
+                        discount = discountMapper(dto.getDiscount());
+                }
+                List<Long> images = dto.getImages().stream().toList();
+
+                BrandResponse brand = brandService.brandResponseMapper(dto.getBrand());
+                ShipperResponse shipper = utilsService.getShipper(dto.getShipper());
+                CompanyResponse company = utilsService.getCompanyById(dto.getCompany());
+                CategoryResponse category = categoryService.mapCategoryToResponseDto(dto.getCategory());
+                ProductDetailsDetailResponse productDetail = productDetailMapper(dto.getProductDetail());
+                List<ProductStockResponse> productStocks = dto.getProductStocks().stream()
+                                .map(this::productStocksMapper).toList();
+                return new ProductDetailsResponse(
+                                dto.getId(),
+                                dto.getName(),
+                                discount,
+                                dto.getIsPublished(),
+                                images,
+                                brand,
+                                shipper,
+                                company,
+                                category,
+                                productDetail,
+                                productStocks,
+                                dto.getCreatedAt(),
+                                dto.getUpdatedAt());
+        }
+
+        private DiscountDto discountMapper(Discount dto) {
+                return new DiscountDto(
+                                dto.getDiscountPercentage(),
+                                dto.getStartDate(),
+                                dto.getEndDate(),
+                                dto.getAppliedPrice());
+        }
+
+        private ProductDetailsDetailResponse productDetailMapper(ProductDetail dto) {
+                List<FeatureDto> features = dto.getFeatures().stream()
+                                .map(this::featureDtoMapper).toList();
+
+                List<ProductCriteriaResponse> productCriterias = dto.getProductCriterias().stream()
+                                .map(this::productCriteriaMapper).toList();
+                return new ProductDetailsDetailResponse(
+                                dto.getId(),
+                                dto.getDescription(),
+                                dto.getShortDescription(),
+                                features,
+                                productCriterias);
+        }
+
+        private ProductCriteriaResponse productCriteriaMapper(ProductCriteria dto) {
+                List<CriteriaOptionResponse> criteriaOptions = dto.getCriteriaOptions().stream()
+                                .map(this::criteriaOptionsMapper).toList();
+                ProductVariationResponse variation = productVariationMapper(dto.getVariation());
+                return new ProductCriteriaResponse(
+                                dto.getId(),
+                                variation,
+                                criteriaOptions);
+        }
+
+        private ProductVariationResponse productVariationMapper(Variation dto) {
+                return new ProductVariationResponse(
+                                dto.getId(),
+                                dto.getName());
+        }
+
+        private CriteriaOptionResponse criteriaOptionsMapper(CriteriaOption dto) {
+                List<Long> images = dto.getImages().stream().toList();
+                ProductVariationOptionResponse variationOption = variationOptionMapper(dto.getVariationOption());
+                return new CriteriaOptionResponse(
+                                dto.getId(),
+                                variationOption,
+                                images);
+        }
+
+        private ProductVariationOptionResponse variationOptionMapper(VariationOption dto) {
+                return new ProductVariationOptionResponse(
+                                dto.getId(),
+                                dto.getName());
+        }
+
+        private ProductStockResponse productStocksMapper(ProductStock dto) {
+                List<StockVariationResponse> stockVariations = dto.getStockVariations().stream()
+                                .map(this::stockVariationMapper).toList();
+
+                return new ProductStockResponse(
+                                dto.getId(),
+                                dto.getStockQuantity(),
+                                dto.getAdditionalPrice(),
+                                dto.getIsLimited(),
+                                dto.getReplenishQuantity(),
+                                stockVariations);
+
+        }
+
+        public StockVariationResponse stockVariationMapper(StockVariation dto) {
+                VariationOptionResponse variationOption = new VariationOptionResponse(
+                                dto.getVariationOption().getId(),
+                                dto.getVariationOption().getName());
+                return new StockVariationResponse(
+                                dto.getVariation().getId(),
+                                dto.getVariation().getName(),
+                                variationOption);
+
+        }
+
 }
