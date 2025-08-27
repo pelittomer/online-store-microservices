@@ -52,12 +52,12 @@ public class ProductStock {
             BigDecimal additionalPrice,
             Boolean isLimited,
             Integer replenishQuantity,
-            Product product) {
+            Set<StockVariation> stockVariations) {
         this.stockQuantity = stockQuantity;
         this.additionalPrice = additionalPrice;
         this.isLimited = isLimited;
         this.replenishQuantity = replenishQuantity;
-        this.product = product;
+        this.stockVariations = stockVariations;
     }
 
     public Long getId() {

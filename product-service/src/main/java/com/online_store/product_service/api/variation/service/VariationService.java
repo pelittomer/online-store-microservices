@@ -14,27 +14,33 @@ import com.online_store.product_service.api.variation.dto.VariationRequest;
 import com.online_store.product_service.api.variation.dto.VariationResponse;
 import com.online_store.product_service.api.variation.model.Variation;
 import com.online_store.product_service.api.variation.model.VariationOption;
+import com.online_store.product_service.api.variation.repository.VariationOptionRepository;
 import com.online_store.product_service.api.variation.repository.VariationRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class VariationService {
     private static final Logger logger = LoggerFactory.getLogger(VariationService.class);
-    private final VariationRepository repository;
+    private final VariationRepository variationRepository;
+    private final VariationOptionRepository variationOptionRepository;
     private final CategoryService categoryService;
 
-    public VariationService(VariationRepository repository,
+    public VariationService(VariationRepository variationRepository,
+            VariationOptionRepository variationOptionRepository,
             CategoryService categoryService) {
-        this.repository = repository;
+        this.variationRepository = variationRepository;
+        this.variationOptionRepository = variationOptionRepository;
         this.categoryService = categoryService;
     }
 
     public String addVariation(VariationRequest dto) {
-           logger.info("Adding new variation with name: '{}' for category ID: {}", dto.name(), dto.category());
+        logger.info("Adding new variation with name: '{}' for category ID: {}", dto.name(), dto.category());
         Category category = categoryService.findCategoryById(dto.category());
         Variation variation = createVariationMapper(dto, category);
-        repository.save(variation);
+        variationRepository.save(variation);
 
-         logger.info("Variation created successfully with ID: {}", variation.getId());
+        logger.info("Variation created successfully with ID: {}", variation.getId());
         return "Variation created successfully.";
     }
 
@@ -43,7 +49,7 @@ public class VariationService {
 
         Category category = categoryService.findCategoryById(categoryId);
 
-        return repository.findByCategory(category).stream()
+        return variationRepository.findByCategory(category).stream()
                 .map(this::mapVariationToResponseDto)
                 .collect(Collectors.toList());
     }
@@ -56,6 +62,16 @@ public class VariationService {
         });
 
         return variation;
+    }
+
+    public Variation findVariationById(Long id) {
+        return variationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Variation not found!"));
+    }
+
+    public VariationOption findVariationOptionById(Long id) {
+        return variationOptionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Variation option not found!"));
     }
 
     private VariationResponse mapVariationToResponseDto(Variation dto) {

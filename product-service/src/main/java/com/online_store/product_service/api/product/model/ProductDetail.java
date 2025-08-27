@@ -48,10 +48,12 @@ public class ProductDetail {
 
     public ProductDetail(String description,
             String shortDescription,
-            Product product) {
+            Set<Feature> features,
+            List<ProductCriteria> productCriterias) {
         this.description = description;
         this.shortDescription = shortDescription;
-        this.product = product;
+        this.features = features;
+        this.productCriterias = productCriterias;
     }
 
     public Long getId() {

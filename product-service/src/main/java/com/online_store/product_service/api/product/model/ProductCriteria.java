@@ -38,9 +38,9 @@ public class ProductCriteria {
     }
 
     public ProductCriteria(Variation variation,
-            ProductDetail productDetail) {
+            Set<CriteriaOption> criteriaOptions) {
         this.variation = variation;
-        this.productDetail = productDetail;
+        this.criteriaOptions = criteriaOptions;
     }
 
     public Long getId() {

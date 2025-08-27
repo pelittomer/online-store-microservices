@@ -82,15 +82,138 @@ public class Product {
     public Product() {
     }
 
-    public Product(String name, BigDecimal price, Discount discount, Brand brand, Long shipper, Long company,
-            Category category, Boolean isPublished) {
+    public Product(
+            String name,
+            BigDecimal price,
+            Boolean isPublished,
+            Set<Long> images,
+            Brand brand,
+            Long shipper,
+            Long company,
+            Category category,
+            ProductDetail productDetail,
+            List<ProductStock> productStocks) {
         this.name = name;
         this.price = price;
-        this.discount = discount;
+        this.isPublished = isPublished;
+        this.images = images;
         this.brand = brand;
         this.shipper = shipper;
         this.company = company;
         this.category = category;
+        this.productDetail = productDetail;
+        this.productStocks = productStocks;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public Discount getDiscount() {
+        return discount;
+    }
+
+    public Boolean getIsPublished() {
+        return isPublished;
+    }
+
+    public Set<Long> getImages() {
+        return images;
+    }
+
+    public Brand getBrand() {
+        return brand;
+    }
+
+    public Long getShipper() {
+        return shipper;
+    }
+
+    public Long getCompany() {
+        return company;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public ProductDetail getProductDetail() {
+        return productDetail;
+    }
+
+    public List<ProductStock> getProductStocks() {
+        return productStocks;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public void setDiscount(Discount discount) {
+        this.discount = discount;
+    }
+
+    public void setIsPublished(Boolean isPublished) {
         this.isPublished = isPublished;
+    }
+
+    public void setImages(Set<Long> images) {
+        this.images = images;
+    }
+
+    public void setBrand(Brand brand) {
+        this.brand = brand;
+    }
+
+    public void setShipper(Long shipper) {
+        this.shipper = shipper;
+    }
+
+    public void setCompany(Long company) {
+        this.company = company;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public void setProductDetail(ProductDetail productDetail) {
+        this.productDetail = productDetail;
+    }
+
+    public void setProductStocks(List<ProductStock> productStocks) {
+        this.productStocks = productStocks;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

@@ -17,6 +17,8 @@ import com.online_store.product_service.client.upload.UploadResponse;
 import com.online_store.product_service.common.response.ApiResponse;
 import com.online_store.product_service.common.utils.UtilsService;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class BrandService {
     private static final Logger logger = LoggerFactory.getLogger(BrandService.class);
@@ -63,13 +65,18 @@ public class BrandService {
         }
     }
 
+    public Brand findByIdBrand(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Brand not found."));
+    }
+
     private Brand createBrandMapper(BrandRequest dto, Long uploadId) {
         return new Brand(
                 dto.name(),
                 uploadId);
     }
 
-    private BrandResponse brandResponseMapper(Brand brand) {
+    public BrandResponse brandResponseMapper(Brand brand) {
         return new BrandResponse(
                 brand.getId(),
                 brand.getName(),

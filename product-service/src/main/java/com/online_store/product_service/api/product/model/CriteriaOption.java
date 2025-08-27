@@ -37,10 +37,8 @@ public class CriteriaOption {
     }
 
     public CriteriaOption(VariationOption variationOption,
-            ProductCriteria productCriteria,
             Set<Long> images) {
         this.variationOption = variationOption;
-        this.productCriteria = productCriteria;
         this.images = images;
     }
 
