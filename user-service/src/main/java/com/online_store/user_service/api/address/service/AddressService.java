@@ -44,6 +44,12 @@ public class AddressService {
                 .collect(Collectors.toList());
     }
 
+    public AddressResponse getAddress(Long id) {
+        Long userId = utilsService.getCurrentUserId();
+        Address address = findByUserAndId(userId, id);
+        return getAddressMapper(address);
+    }
+
     public String deleteAddress(Long addressId) {
         Long accountId = utilsService.getCurrentUserId();
         Address addressToDelete = findByUserAndId(accountId, addressId);
@@ -81,4 +87,5 @@ public class AddressService {
                 dto.getDoorNumber(),
                 dto.getPhone());
     }
+
 }
