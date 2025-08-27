@@ -127,6 +127,11 @@ public class ProductService {
                                 .map(this::productResponseMapper).toList();
         }
 
+        public ProductResponse getProduct(Long id) {
+                Product product = findProductById(id);
+                return productResponseMapper(product);
+        }
+
         public ProductDetailsResponse getProductById(Long id) {
                 Product product = findProductById(id);
                 return productDetailsResponseMapper(product);

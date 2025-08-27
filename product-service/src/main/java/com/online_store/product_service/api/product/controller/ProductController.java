@@ -56,12 +56,20 @@ public class ProductController {
                                                 service.listProducts()));
         }
 
-        @GetMapping("/{id}")
+        @GetMapping("/details/{id}")
         public ResponseEntity<ApiResponse<ProductDetailsResponse>> getProductById(
                         @PathVariable(required = true) Long id) {
                 return ResponseEntity.ok(
                                 ApiResponse.success("",
                                                 service.getProductById(id)));
+        }
+
+        @GetMapping("{id}")
+        public ResponseEntity<ApiResponse<ProductResponse>> getProduct(
+                        @PathVariable(required = true) Long id) {
+                return ResponseEntity.ok(
+                                ApiResponse.success("",
+                                                service.getProduct(id)));
         }
 
         @GetMapping("{productId}/stock/{stockId}")
