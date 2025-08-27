@@ -41,6 +41,27 @@ public class UploadService {
         return findUploadById(id);
     }
 
+    public String updateFile(Long id, MultipartFile file) throws IOException {
+        logger.info("Attempting to update file with ID: {}", id);
+
+        Upload upload = findUploadById(id);
+        upload.setFileContent(file.getBytes());
+        repository.save(upload);
+
+        logger.info("File with ID: {} updated successfully.", id);
+        return "File updated successfully.";
+    }
+
+    public String deleteFile(Long id) {
+        logger.info("Attempting to delete file with ID: {}", id);
+
+        Upload upload = findUploadById(id);
+        repository.delete(upload);
+
+        logger.info("File with ID: {} deleted successfully.", id);
+        return "file deleted successfully";
+    }
+
     private Upload createFileMapper(MultipartFile file) throws IOException {
         logger.debug("Mapping MultipartFile to Upload object for file: {}", file.getOriginalFilename());
         return new Upload(
@@ -56,4 +77,5 @@ public class UploadService {
                     return new EntityNotFoundException("Upload not found!");
                 });
     }
+
 }
