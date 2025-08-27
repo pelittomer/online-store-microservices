@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -16,6 +17,7 @@ import com.online_store.logistic_service.api.shipper.service.ShipperService;
 import com.online_store.logistic_service.common.response.ApiResponse;
 
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/shipper")
@@ -40,4 +42,11 @@ public class ShipperController {
         return ResponseEntity.ok(
                 ApiResponse.success("", service.listShippers()));
     }
+
+    @GetMapping("{id}")
+    public ResponseEntity<ApiResponse<ShipperResponse>> getShipperById(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                ApiResponse.success("", service.getShipperById(id)));
+    }
+
 }
