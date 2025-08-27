@@ -9,6 +9,7 @@ import com.online_store.logistic_service.api.company.exception.CompanyAlreadyExi
 import com.online_store.logistic_service.api.company.exception.CompanyNotFoundException;
 import com.online_store.logistic_service.api.company.exception.CompanyUpdateException;
 import com.online_store.logistic_service.api.shipper.exception.ShipperAlreadyExistsException;
+import com.online_store.logistic_service.api.shipper.exception.ShipperNotFoundException;
 import com.online_store.logistic_service.common.response.ErrorResponse;
 
 @ControllerAdvice
@@ -35,5 +36,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleShipperAlreadyExistsException(ShipperAlreadyExistsException ex) {
         return new ResponseEntity<>(new ErrorResponse(ex.getMessage(), HttpStatus.CONFLICT.value()),
                 HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(ShipperNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleShipperNotFoundExceptionException(ShipperNotFoundException ex) {
+        return new ResponseEntity<>(new ErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND.value()),
+                HttpStatus.NOT_FOUND);
     }
 }

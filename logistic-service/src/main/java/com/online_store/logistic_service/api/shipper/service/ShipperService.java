@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.online_store.logistic_service.api.shipper.dto.ShipperRequest;
 import com.online_store.logistic_service.api.shipper.dto.ShipperResponse;
 import com.online_store.logistic_service.api.shipper.exception.ShipperAlreadyExistsException;
+import com.online_store.logistic_service.api.shipper.exception.ShipperNotFoundException;
 import com.online_store.logistic_service.api.shipper.model.Shipper;
 import com.online_store.logistic_service.api.shipper.repository.ShipperRepository;
 import com.online_store.logistic_service.client.upload.UploadClient;
@@ -55,6 +56,20 @@ public class ShipperService {
         logger.info("Fetching all shippers.");
         return repository.findAll().stream()
                 .map(this::shipperResponseMapper).toList();
+    }
+
+    public ShipperResponse getShipperById(Long shipperId) {
+        logger.info("Fetching shipper by ID: {}", shipperId);
+        Shipper shipper = findByShipperId(shipperId);
+        return shipperResponseMapper(shipper);
+    }
+
+    private Shipper findByShipperId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> {
+                    logger.warn("Shipper not found with ID: {}", id);
+                    return new ShipperNotFoundException("Shipper not found with ID: " + id);
+                });
     }
 
     private void shipperValidation(ShipperRequest dto) {
